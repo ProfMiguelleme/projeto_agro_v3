@@ -8,8 +8,6 @@ const port = 3000;
 app.use(cors()); // Libera a entrada!
 app.use(express.json()); // Ensina o servidor a ler pacotes JSON
 
-
-// ... rota app.get('/startups')
 app.get('/', (req, res) => {
   res.send('AgroTech Connect: O servidor está rodando!');
 });
@@ -18,10 +16,9 @@ app.get('/startups', (req, res) => {
   res.json(listaStartups); // Usa os dados importados
 });
 
-
 app.post('/startups', (req, res) => {
   const novaStartup = req.body;
-  novaStartup.id = listaStartups.length + 1; // ID automático
+  novaStartup.id = listaStartups.length > 0 ? Math.max(...listaStartups.map(s => s.id)) + 1 : 1; // ID automático seguro
   listaStartups.push(novaStartup); // Guarda na lista
   res.status(201).json(novaStartup);
 });
@@ -29,10 +26,10 @@ app.post('/startups', (req, res) => {
 // Rota DELETE: Recebe novos dados
 app.delete('/startups/:id', (req, res) => {
   const idParaDeletar = parseInt(req.params.id);
-  const index = startups.findIndex(s => s.id === idParaDeletar);
+  const index = listaStartups.findIndex(s => s.id === idParaDeletar);
  
   if (index !== -1) {
-    startups.splice(index, 1); // Remove da lista
+    listaStartups.splice(index, 1); // Remove da lista
     res.status(200).json({ mensagem: "Deletado com sucesso" });
   } else {
     res.status(404).json({ erro: "Não encontrada" });
@@ -42,17 +39,17 @@ app.delete('/startups/:id', (req, res) => {
 // Rota PUT: Recebe novos dados
 app.put('/startups/:id', (req, res) => {
   const idParaEditar = parseInt(req.params.id);
-  const index = startups.findIndex(s => s.id === idParaEditar);
+  const index = listaStartups.findIndex(s => s.id === idParaEditar);
  
   if (index !== -1) {
-    startups[index].nome = req.body.nome;
-    startups[index].especialidade = req.body.especialidade;
-    res.status(200).json(startups[index]);
+    listaStartups[index].nome = req.body.nome;
+    listaStartups[index].especialidade = req.body.especialidade;
+    listaStartups[index].anoAbertura = req.body.anoAbertura;
+    res.status(200).json(listaStartups[index]);
   } else {
     res.status(404).json({ erro: "Não encontrada" });
   }
 });
-
 
 
 // Ligando o servidor
