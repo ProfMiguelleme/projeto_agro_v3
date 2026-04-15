@@ -1,33 +1,39 @@
 # 📚 Guia Completo: Migrations Knex até Docker
 
 # 🛠️ O que é uma Migration?
-´´´
+```
 Imagine que estamos construindo uma fazenda inteligente.
 - Antes de comprar as sementes ou os bois, você precisa de um projeto de engenharia 📝 que diga: "aqui será o curral", "ali será a plantação de milho".
 - A Migration é esse projeto escrito em código. Ela descreve para o computador como o banco de dados deve ser estruturado.
 - A vantagem? Se você mudar de computador ou trabalhar com outra pessoa, basta rodar a migration e o banco de dados "nasce" exatamente igual no outro lugar.
-´´´´
+```
 
 # 💻 Passo 1: Instalando o "Tradutor" (Knex)
-´´
+
 Para conversar com o banco de dados sem precisar aprender uma linguagem complexa agora, usamos o Knex. Ele traduz nosso código JavaScript para a linguagem do banco.
 
-bash
-´´´
+```bash
 npm install knex sqlite3
-´´´
+```
 
 ## Após instalar o Knex sempre execute:
-bash
+
+```bash
 npm audit
-E Use npm audit fix – para correções automáticas de segurança.
-Monitore essas vulnerabilidades constantemente.
+```
+
+E Use:
+```bash
+npm audit fix
+```
+
+-para correções automáticas de segurança.
+-Monitore essas vulnerabilidades constantemente.
 
 
 ## Antes de continuar criar o arquivo knexfile.js na raiz do projeto
 
-bash
-´´´´
+```javascript
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -83,16 +89,14 @@ export default {
 
 };
 
-´´´
+```
 
 # 💻 Passo 2: Criando a nossa primeira "Planta"
-´´
 Agora, vamos pedir para o Knex criar o arquivo onde desenharemos nossas tabelas. Digite no terminal:
 
-bash
-´´´´
+```bash
 npx knex migrate:make criar_tabelas_iniciais
-´´´
+```
 
 Isso vai criar um arquivo dentro de uma pasta chamada migrations. Abra esse arquivo. Você verá que ele tem duas partes: exports.up (o que construir) e exports.down (como desfazer a construção).
 
