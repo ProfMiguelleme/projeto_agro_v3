@@ -1,5 +1,102 @@
 # 📚 Guia Completo: Migrations Knex até Docker
 
+# 🛠️ O que é uma Migration?
+´´´
+Imagine que estamos construindo uma fazenda inteligente.
+- Antes de comprar as sementes ou os bois, você precisa de um projeto de engenharia 📝 que diga: "aqui será o curral", "ali será a plantação de milho".
+- A Migration é esse projeto escrito em código. Ela descreve para o computador como o banco de dados deve ser estruturado.
+- A vantagem? Se você mudar de computador ou trabalhar com outra pessoa, basta rodar a migration e o banco de dados "nasce" exatamente igual no outro lugar.
+´´´´
+
+# 💻 Passo 1: Instalando o "Tradutor" (Knex)
+´´
+Para conversar com o banco de dados sem precisar aprender uma linguagem complexa agora, usamos o Knex. Ele traduz nosso código JavaScript para a linguagem do banco.
+
+bash
+´´´
+npm install knex sqlite3
+´´´
+
+## Após instalar o Knex sempre execute:
+bash
+npm audit
+E Use npm audit fix – para correções automáticas de segurança.
+Monitore essas vulnerabilidades constantemente.
+
+
+## Antes de continuar criar o arquivo knexfile.js na raiz do projeto
+
+bash
+´´´´
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+/**
+ * @type { Object.<string, import("knex").Knex.Config> }
+ */
+export default {
+
+  development: {
+    client: 'sqlite3',
+    connection: {
+      filename: join(__dirname, 'dev.sqlite3')
+    },
+    useNullAsDefault: true,
+    migrations: {
+      directory: join(__dirname, 'migrations')
+    },
+    seeds: {
+      directory: join(__dirname, 'seeds')
+    }
+  },
+
+  staging: {
+    client: 'sqlite3',
+    connection: {
+      filename: join(__dirname, 'staging.sqlite3')
+    },
+    useNullAsDefault: true,
+    migrations: {
+      directory: join(__dirname, 'migrations')
+    },
+    seeds: {
+      directory: join(__dirname, 'seeds')
+    }
+  },
+
+  production: {
+    client: 'sqlite3',
+    connection: {
+      filename: join(__dirname, 'production.sqlite3')
+    },
+    useNullAsDefault: true,
+    migrations: {
+      directory: join(__dirname, 'migrations')
+    },
+    seeds: {
+      directory: join(__dirname, 'seeds')
+    }
+  }
+
+};
+
+´´´
+
+# 💻 Passo 2: Criando a nossa primeira "Planta"
+´´
+Agora, vamos pedir para o Knex criar o arquivo onde desenharemos nossas tabelas. Digite no terminal:
+
+bash
+´´´´
+npx knex migrate:make criar_tabelas_iniciais
+´´´
+
+Isso vai criar um arquivo dentro de uma pasta chamada migrations. Abra esse arquivo. Você verá que ele tem duas partes: exports.up (o que construir) e exports.down (como desfazer a construção).
+
+
 ## Visão Geral
 
 Este documento detalha todos os passos necessários após executar `npx knex migrate:make criar_tabelas_iniciais` até ter o banco de dados funcionando com Docker.
@@ -283,7 +380,6 @@ curl -X POST http://localhost:3000/startups \
     "anoAbertura": 2020
   }'
 ```
-
 Resposta esperada:
 ```json
 {
@@ -295,6 +391,7 @@ Resposta esperada:
   "updated_at": "2026-04-15T14:30:00.000Z"
 }
 ```
+### Para Saber se O Curl Funicionou execute: Invoke-WebRequest -Uri "http://localhost:3000/startups" -Method GET -UseBasicParsing | Select-Object -ExpandProperty Content
 
 #### PUT - Atualizar startup
 ```bash
@@ -311,6 +408,7 @@ curl -X PUT http://localhost:3000/startups/1 \
 ```bash
 curl -X DELETE http://localhost:3000/startups/1
 ```
+
 
 ---
 

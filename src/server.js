@@ -1,58 +1,107 @@
 import express from 'express';
-import cors from 'cors'; // Importa
-import listaStartups from './startups.js';
+import cors from 'cors';
+import knex from 'knex';
+import knexConfig from '../knexfile.js';
 
 const app = express();
 const port = 3000;
 
-app.use(cors()); // Libera a entrada!
-app.use(express.json()); // Ensina o servidor a ler pacotes JSON
+// Configurar Knex com o ambiente de desenvolvimento
+const db = knex(knexConfig.development);
 
+app.use(cors());
+app.use(express.json());
+
+// Rota GET - Status do servidor
 app.get('/', (req, res) => {
-  res.send('AgroTech Connect: O servidor está rodando!');
+  res.send('🌾 AgroTech Connect: O servidor está rodando com banco de dados!');
 });
 
-app.get('/startups', (req, res) => {
-  res.json(listaStartups); // Usa os dados importados
-});
-
-app.post('/startups', (req, res) => {
-  const novaStartup = req.body;
-  novaStartup.id = listaStartups.length > 0 ? Math.max(...listaStartups.map(s => s.id)) + 1 : 1; // ID automático seguro
-  listaStartups.push(novaStartup); // Guarda na lista
-  res.status(201).json(novaStartup);
-});
-
-// Rota DELETE: Recebe novos dados
-app.delete('/startups/:id', (req, res) => {
-  const idParaDeletar = parseInt(req.params.id);
-  const index = listaStartups.findIndex(s => s.id === idParaDeletar);
- 
-  if (index !== -1) {
-    listaStartups.splice(index, 1); // Remove da lista
-    res.status(200).json({ mensagem: "Deletado com sucesso" });
-  } else {
-    res.status(404).json({ erro: "Não encontrada" });
+// Rota GET - Buscar todas as startups
+app.get('/startups', async (req, res) => {
+  try {
+    const startups = await db('startups').select('*');
+    res.json(startups);
+  } catch (error) {
+    console.error('Erro ao buscar startups:', error);
+    res.status(500).json({ erro: 'Erro ao buscar startups' });
   }
 });
 
-// Rota PUT: Recebe novos dados
-app.put('/startups/:id', (req, res) => {
-  const idParaEditar = parseInt(req.params.id);
-  const index = listaStartups.findIndex(s => s.id === idParaEditar);
- 
-  if (index !== -1) {
-    listaStartups[index].nome = req.body.nome;
-    listaStartups[index].especialidade = req.body.especialidade;
-    listaStartups[index].anoAbertura = req.body.anoAbertura;
-    res.status(200).json(listaStartups[index]);
-  } else {
-    res.status(404).json({ erro: "Não encontrada" });
+// Rota POST - Criar nova startup
+app.post('/startups', async (req, res) => {
+  try {
+    const { nome, especialidade, anoAbertura } = req.body;
+
+    // Validação
+    if (!nome || !especialidade) {
+      return res.status(400).json({ erro: 'Nome e especialidade são obrigatórios' });
+    }
+
+    const [id] = await db('startups').insert({
+      nome,
+      especialidade,
+      anoAbertura: anoAbertura || new Date().getFullYear()
+    }).returning('id');
+
+    const novaStartup = await db('startups').where({ id }).first();
+    res.status(201).json(novaStartup);
+  } catch (error) {
+    console.error('Erro ao criar startup:', error);
+    res.status(500).json({ erro: 'Erro ao criar startup' });
   }
 });
 
+// Rota PUT - Atualizar startup
+app.put('/startups/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { nome, especialidade, anoAbertura } = req.body;
 
-// Ligando o servidor
+    // Validação
+    if (!nome || !especialidade) {
+      return res.status(400).json({ erro: 'Nome e especialidade são obrigatórios' });
+    }
+
+    const atualizado = await db('startups')
+      .where({ id })
+      .update({
+        nome,
+        especialidade,
+        anoAbertura: anoAbertura || new Date().getFullYear()
+      })
+      .returning('*');
+
+    if (atualizado.length > 0) {
+      res.json(atualizado[0]);
+    } else {
+      res.status(404).json({ erro: 'Startup não encontrada' });
+    }
+  } catch (error) {
+    console.error('Erro ao atualizar startup:', error);
+    res.status(500).json({ erro: 'Erro ao atualizar startup' });
+  }
+});
+
+// Rota DELETE - Remover startup
+app.delete('/startups/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const deletadas = await db('startups').where({ id }).del();
+
+    if (deletadas > 0) {
+      res.json({ mensagem: 'Startup deletada com sucesso' });
+    } else {
+      res.status(404).json({ erro: 'Startup não encontrada' });
+    }
+  } catch (error) {
+    console.error('Erro ao deletar startup:', error);
+    res.status(500).json({ erro: 'Erro ao deletar startup' });
+  }
+});
+
+// Iniciar servidor
 app.listen(port, () => {
-  console.log(`Servidor rodando em http://localhost:${port}`);
+  console.log(`🚀 Servidor rodando em http://localhost:${port}`);
+  console.log(`📚 Banco de dados: SQLite (dev.sqlite3)`);
 });
