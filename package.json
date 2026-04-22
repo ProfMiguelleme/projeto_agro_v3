@@ -14,7 +14,7 @@
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "knex": "^3.2.9",
-    "sqlite3": "^6.0.1"
+    "pg": "^8.11.0"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

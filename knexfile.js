@@ -10,11 +10,14 @@ const __dirname = dirname(__filename);
 export default {
 
   development: {
-    client: 'sqlite3',
+    client: 'pg',
     connection: {
-      filename: join(__dirname, 'dev.sqlite3')
+      host: 'localhost',
+      port: 5432,
+      user: 'agro_user',
+      password: 'agro_pass',
+      database: 'agro_dev'
     },
-    useNullAsDefault: true,
     migrations: {
       directory: join(__dirname, 'migrations')
     },
@@ -24,11 +27,8 @@ export default {
   },
 
   staging: {
-    client: 'sqlite3',
-    connection: {
-      filename: join(__dirname, 'staging.sqlite3')
-    },
-    useNullAsDefault: true,
+    client: 'pg',
+    connection: process.env.DATABASE_URL,
     migrations: {
       directory: join(__dirname, 'migrations')
     },
@@ -38,11 +38,8 @@ export default {
   },
 
   production: {
-    client: 'sqlite3',
-    connection: {
-      filename: join(__dirname, 'production.sqlite3')
-    },
-    useNullAsDefault: true,
+    client: 'pg',
+    connection: process.env.DATABASE_URL,
     migrations: {
       directory: join(__dirname, 'migrations')
     },

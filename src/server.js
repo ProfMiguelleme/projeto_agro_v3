@@ -38,12 +38,14 @@ app.post('/startups', async (req, res) => {
       return res.status(400).json({ erro: 'Nome e especialidade são obrigatórios' });
     }
 
-    const [id] = await db('startups').insert({
+    const [insertResult] = await db('startups').insert({
       nome,
       especialidade,
       anoAbertura: anoAbertura || new Date().getFullYear()
     }).returning('id');
 
+    // PostgreSQL retorna [{ id: number }] enquanto outros bancos podem retornar [number].
+    const id = typeof insertResult === 'object' ? insertResult.id : insertResult;
     const novaStartup = await db('startups').where({ id }).first();
     res.status(201).json(novaStartup);
   } catch (error) {
@@ -103,5 +105,5 @@ app.delete('/startups/:id', async (req, res) => {
 // Iniciar servidor
 app.listen(port, () => {
   console.log(`🚀 Servidor rodando em http://localhost:${port}`);
-  console.log(`📚 Banco de dados: SQLite (dev.sqlite3)`);
+  console.log(`📚 Banco de dados: PostgreSQL (localhost:5432/agro_dev)`);
 });

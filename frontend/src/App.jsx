@@ -1,150 +1,138 @@
 import { useState, useEffect } from 'react';
 import './App.css';
+import StartupForm from './components/StartupForm';
+import StartupGrid from './components/StartupGrid';
+import EditModal from './components/EditModal';
+import * as api from './services/api';
 
 function App() {
   const [startups, setStartups] = useState([]);
-  const [nome, setNome] = useState('');
-  const [especialidade, setEspecialidade] = useState('');
-  const [anoAbertura, setAnoAbertura] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [erro, setErro] = useState('');
+  const [startupEmEdicao, setStartupEmEdicao] = useState(null);
+  const [mensagemSucesso, setMensagemSucesso] = useState('');
 
+  // Buscar startups ao carregar
   useEffect(() => {
-    fetch('http://localhost:3000/startups')
-      .then(resposta => resposta.json())
-      .then(dados => setStartups(dados))
-      .catch(erro => console.error("Erro: ", erro));
+    carregarStartups();
   }, []);
 
-  const cadastrarStartup = (evento) => {
-    evento.preventDefault();
-    const novaStartup = { 
-      nome, 
-      especialidade, 
-      anoAbertura: parseInt(anoAbertura) || new Date().getFullYear() 
-    };
-
-    fetch('http://localhost:3000/startups', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(novaStartup)
-    })
-      .then(res => res.json())
-      .then(dadoSalvo => {
-        setStartups([...startups, dadoSalvo]);
-        setNome('');
-        setEspecialidade('');
-        setAnoAbertura('');
-      })
-      .catch(erro => console.error("Erro: ", erro));
+  const carregarStartups = async () => {
+    try {
+      setIsLoading(true);
+      const dados = await api.obterStartups();
+      setStartups(dados);
+      setErro('');
+    } catch (err) {
+      setErro('Erro ao carregar startups. Verifique se o servidor está rodando.');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const deletarStartup = (id) => {
-    fetch(`http://localhost:3000/startups/${id}`, { method: 'DELETE' })
-      .then(() => {
-        setStartups(startups.filter(s => s.id !== id));
-      })
-      .catch(erro => console.error("Erro ao deletar: ", erro));
+  const handleCriar = async (dados, resetForm) => {
+    try {
+      setIsLoading(true);
+      const novaStartup = await api.criarStartup(dados);
+      setStartups([...startups, novaStartup]);
+      setMensagemSucesso('✅ Startup criada com sucesso!');
+      resetForm();
+      setTimeout(() => setMensagemSucesso(''), 3000);
+    } catch (err) {
+      setErro('Erro ao criar startup');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const editarStartup = (id, startupAtual) => {
-    const novoNome = window.prompt("Novo nome:", startupAtual.nome);
-    const novaEsp = window.prompt("Nova especialidade:", startupAtual.especialidade);
-    const novoAno = window.prompt("Novo ano de abertura:", startupAtual.anoAbertura || '');
+  const handleAtualizar = async (id, dados) => {
+    try {
+      setIsLoading(true);
+      const startupAtualizada = await api.atualizarStartup(id, dados);
+      setStartups(startups.map(s => s.id === id ? startupAtualizada : s));
+      setStartupEmEdicao(null);
+      setMensagemSucesso('✅ Startup atualizada com sucesso!');
+      setTimeout(() => setMensagemSucesso(''), 3000);
+    } catch (err) {
+      setErro('Erro ao atualizar startup');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    if (!novoNome || !novaEsp || !novoAno) return;
-
-    fetch(`http://localhost:3000/startups/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        nome: novoNome, 
-        especialidade: novaEsp,
-        anoAbertura: parseInt(novoAno) || new Date().getFullYear()
-      })
-    })
-      .then(res => res.json())
-      .then(dadoAtualizado => {
-        setStartups(startups.map(s => s.id === id ? dadoAtualizado : s));
-      })
-      .catch(erro => console.error("Erro ao editar: ", erro));
+  const handleDeletar = async (id) => {
+    try {
+      setIsLoading(true);
+      await api.deletarStartup(id);
+      setStartups(startups.filter(s => s.id !== id));
+      setMensagemSucesso('✅ Startup deletada com sucesso!');
+      setTimeout(() => setMensagemSucesso(''), 3000);
+    } catch (err) {
+      setErro('Erro ao deletar startup');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="app-container">
       <header className="hero-section">
-        <h1 className="title">AgroTech Connect</h1>
-        <p className="subtitle">Painel do Produtor Rural</p>
+        <h1 className="title">🌾 AgroTech Connect</h1>
+        <p className="subtitle">Painel de Gerenciamento de Startups Agrícolas</p>
       </header>
-      
+
+      {erro && (
+        <div className="alert alert-error">
+          ⚠️ {erro}
+          <button onClick={() => setErro('')} className="alert-close">×</button>
+        </div>
+      )}
+
+      {mensagemSucesso && (
+        <div className="alert alert-success">
+          {mensagemSucesso}
+        </div>
+      )}
+
       <main className="main-content">
         <section className="form-section">
-          <h2>Cadastrar Nova Startup</h2>
-          <form className="startup-form" onSubmit={cadastrarStartup}>
-            <div className="input-group">
-              <label htmlFor="nome">Nome</label>
-              <input 
-                id="nome"
-                type="text" 
-                placeholder="Ex: AgroTech Solutions" 
-                value={nome} 
-                onChange={e => setNome(e.target.value)} 
-                required 
-              />
-            </div>
-            <div className="input-group">
-              <label htmlFor="especialidade">Especialidade</label>
-              <input 
-                id="especialidade"
-                type="text" 
-                placeholder="Ex: Drones Agrícolas" 
-                value={especialidade} 
-                onChange={e => setEspecialidade(e.target.value)} 
-                required 
-              />
-            </div>
-            <div className="input-group">
-              <label htmlFor="anoAbertura">Ano de Abertura</label>
-              <input 
-                id="anoAbertura"
-                type="number" 
-                placeholder="Ex: 2021" 
-                value={anoAbertura} 
-                onChange={e => setAnoAbertura(e.target.value)} 
-                required 
-                min="1900"
-                max="2099"
-              />
-            </div>
-            <button className="btn-submit" type="submit">
-              <span>Cadastrar Startup</span>
-            </button>
-          </form>
+          <h2>📝 Cadastrar Nova Startup</h2>
+          <StartupForm 
+            onSubmit={handleCriar}
+            isLoading={isLoading}
+          />
         </section>
 
         <section className="list-section">
-          <h2>Startups Disponíveis</h2>
-          {startups.length === 0 ? (
-            <p className="empty-state">Nenhuma startup cadastrada ainda.</p>
-          ) : (
-            <div className="startup-grid">
-              {startups.map(startup => (
-                <article key={startup.id} className="startup-card">
-                  <div className="card-header">
-                    <h3>{startup.nome}</h3>
-                    <span className="badge year-badge">{startup.anoAbertura || 'N/D'}</span>
-                  </div>
-                  <div className="card-body">
-                    <span className="badge tech-badge">{startup.especialidade}</span>
-                  </div>
-                  <div className="card-footer">
-                    <button className="btn-edit" onClick={() => editarStartup(startup.id, startup)}>Editar</button>
-                    <button className="btn-delete" onClick={() => deletarStartup(startup.id)}>Excluir</button>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
+          <div className="list-header">
+            <h2>📊 Startups Disponíveis ({startups.length})</h2>
+            <button 
+              className="btn-refresh"
+              onClick={carregarStartups}
+              disabled={isLoading}
+            >
+              🔄 Recarregar
+            </button>
+          </div>
+          <StartupGrid 
+            startups={startups}
+            onEdit={setStartupEmEdicao}
+            onDelete={handleDeletar}
+            isLoading={isLoading}
+          />
         </section>
       </main>
+
+      <EditModal 
+        startup={startupEmEdicao}
+        onSubmit={handleAtualizar}
+        onClose={() => setStartupEmEdicao(null)}
+        isLoading={isLoading}
+      />
     </div>
   );
 }

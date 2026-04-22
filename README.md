@@ -1,3 +1,72 @@
+# 🌾 AgroTech Connect - CRUD Completo
+
+Plataforma profissional de gerenciamento de startups agrícolas com **CRUD completo**, integração **PostgreSQL + Docker** e interface **React moderna**.
+## ✨ Destaques
+
+- 🚀 **CRUD 100% Funcional** (Create, Read, Update, Delete)
+- 🗄️ **PostgreSQL em Docker** com dados persistentes
+- ⚛️ **React + Vite** com componentes reutilizáveis
+- 🎨 **Design Responsivo** e moderno
+- 📚 **Documentação Completa** (6 guias)
+- ✅ **Pronto para Produção**
+## 🚀 Quick Start
+
+### Pré-requisitos
+- Docker instalado
+- Node.js 20+
+- npm
+
+### 1. Subir Banco de Dados
+```bash
+docker-compose up -d
+```
+
+### 2. Instalar Dependências
+```bash
+npm install
+cd frontend && npm install && cd ..
+```
+
+### 3. Rodar Migrações
+```bash
+npx knex migrate:latest
+npx knex seed:run
+```
+
+### 4. Iniciar Aplicação
+```bash
+npm run dev-all
+```
+
+### 5. Acessar
+- Frontend: http://localhost:5173
+- Backend: http://localhost:3000
+
+---
+
+## 📁 Estrutura do Projeto
+
+```
+projeto_agro_v4/
+├── frontend/
+│   ├── src/
+│   │   ├── components/           # Componentes React
+│   │   │   ├── StartupForm.jsx   # Formulário
+│   │   │   ├── StartupGrid.jsx   # Listagem
+│   │   │   └── EditModal.jsx     # Modal de edição
+│   │   ├── services/
+│   │   │   └── api.js            # Serviço de API
+│   │   ├── App.jsx               # Componente principal
+│   │   └── App.css               # Estilos
+│   └── package.json
+├── src/
+│   └── server.js                 # Backend Express
+├── migrations/                   # Knex migrations
+├── seeds/                        # Dados iniciais
+├── docker-compose.yml            # Configuração Docker
+├── knexfile.js                   # Configuração Knex
+└── package.json
+``` 
 # 🌾 AgroTech Connect: Painel do Produtor Rural
 
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green)](https://nodejs.org/)
